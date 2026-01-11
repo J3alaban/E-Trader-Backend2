@@ -10,18 +10,32 @@ import com.ecommerce.backend.services.abstracts.OrderService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 @Service
 @AllArgsConstructor
 public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
+
     @Override
+    public OrderResponseDTO createOrder(OrderRequestDTO orderRequestDTO) {
+        Order order = orderMapper.orderFromRequest(orderRequestDTO);
+        // Eğer orderDate null ise otomatik atama
+        if (order.getOrderDate() == null) {
+            order.setOrderDate(LocalDateTime.now());
+        }
+        Order savedOrder = orderRepository.save(order);
+        return orderMapper.responseFromOrder(savedOrder);
+    }
+
+ /*   @Override
     public OrderResponseDTO createOrder(OrderRequestDTO orderRequestDTO) {
         Order order = orderMapper.orderFromRequest(orderRequestDTO);
         Order savedOrder = orderRepository.save(order);
         return orderMapper.responseFromOrder(savedOrder);
-    }
+    }  */
+
 
     @Override
     public OrderResponseDTO getOrderById(Long id) {
@@ -56,3 +70,4 @@ public class OrderServiceImpl implements OrderService {
         orderRepository.save(order);
     }
 }
+

@@ -38,10 +38,13 @@ public class AddressServiceImpl implements AddressService {
         Address address = addressRepository.findById(addressId)
                 .orElseThrow(() -> new RuntimeException("Address not found"));
 
-        address = addressMapper.addressFromRequest(addressRequest);
-        address.setId(addressId); // ID'yi koruyarak güncelleme yapıyoruz
-        Address updatedAddress = addressRepository.save(address);
+        address.setStreet(addressRequest.getStreet());
+        address.setCity(addressRequest.getCity());
+        address.setState(addressRequest.getState());
+        address.setZipCode(addressRequest.getZipCode());
+        address.setCountry(addressRequest.getCountry());
 
+        Address updatedAddress = addressRepository.save(address);
         return addressMapper.responseFromAddress(updatedAddress);
     }
 

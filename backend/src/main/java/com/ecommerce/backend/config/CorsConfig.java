@@ -1,4 +1,6 @@
+/*
 package com.ecommerce.backend.config;
+
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,7 +16,7 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")  // Apply CORS to all paths
-                        .allowedOrigins("http://localhost:8080") // Allow all origins, or specify specific origins
+                        .allowedOrigins("http://localhost:5173") // Allow all origins, or specify specific origins
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Specify allowed HTTP methods
                         .allowedHeaders("*") // Allow all headers
                         .allowCredentials(true); // Allow credentials (cookies, authorization headers)
@@ -22,3 +24,5 @@ public class CorsConfig {
         };
     }
 }
+
+*/

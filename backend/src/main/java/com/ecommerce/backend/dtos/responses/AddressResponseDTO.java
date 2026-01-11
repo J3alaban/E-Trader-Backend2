@@ -17,4 +17,6 @@ public class AddressResponseDTO {
     private String zipCode;
     private String country;
     private Long userId;
+    private Long addressId;
+    private String address;
 }

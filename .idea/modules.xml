@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/E-Commerce-BackendApi-Project.iml" filepath="$PROJECT_DIR$/.idea/E-Commerce-BackendApi-Project.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/Spring_Boot_E-Commerce-BackendApi.iml" filepath="$PROJECT_DIR$/.idea/Spring_Boot_E-Commerce-BackendApi.iml" />
     </modules>
   </component>
 </project>

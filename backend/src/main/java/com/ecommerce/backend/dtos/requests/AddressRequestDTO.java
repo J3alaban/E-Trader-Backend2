@@ -21,6 +21,5 @@ public class AddressRequestDTO {
     private String zipCode;
     @NotBlank
     private String country;
-    @NotBlank
-    private Long userId;
+
 }

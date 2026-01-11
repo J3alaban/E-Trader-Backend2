@@ -3,12 +3,13 @@ package com.ecommerce.backend.controller;
 import com.ecommerce.backend.dtos.requests.ProductRequestDTO;
 import com.ecommerce.backend.dtos.responses.ProductResponseDTO;
 import com.ecommerce.backend.services.abstracts.ProductService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+ //@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/api/v1/products")
 @AllArgsConstructor
@@ -16,11 +17,21 @@ public class ProductController {
     private final ProductService productService;
 
 
-    @GetMapping
-    public ResponseEntity<Page<ProductResponseDTO>> getAllProducts(Pageable pageable) {
-        Page<ProductResponseDTO> response = productService.getAllProducts(pageable);
-        return ResponseEntity.ok(response);
-    }
+     @GetMapping
+     public ResponseEntity<Page<ProductResponseDTO>> getAllProducts(
+             @RequestParam(required = false) String category,
+             Pageable pageable
+     ) {
+         Page<ProductResponseDTO> response;
+
+         if (category != null && !category.isBlank()) {
+             response = productService.getProductsByCategory(category, pageable);
+         } else {
+             response = productService.getAllProducts(pageable);
+         }
+
+         return ResponseEntity.ok(response);
+     }
 
 
     @GetMapping("/{id}")
@@ -31,7 +42,7 @@ public class ProductController {
 
 
     @PostMapping
-    public ResponseEntity<ProductResponseDTO> createProduct(@RequestBody ProductRequestDTO productRequestDTO) {
+    public ResponseEntity<ProductResponseDTO> createProduct( @Valid @RequestBody ProductRequestDTO productRequestDTO) {
         ProductResponseDTO response = productService.createProduct(productRequestDTO);
         return ResponseEntity.ok(response);
     }

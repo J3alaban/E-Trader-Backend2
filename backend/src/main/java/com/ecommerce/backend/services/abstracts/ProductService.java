@@ -20,4 +20,6 @@ public interface ProductService {
 
 
     ProductResponseDTO updateStock(Long id, Integer stock);
+    Page<ProductResponseDTO> getProductsByCategory(String category, Pageable pageable);
+
 }

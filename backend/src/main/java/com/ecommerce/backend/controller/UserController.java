@@ -1,12 +1,15 @@
 package com.ecommerce.backend.controller;
 
 import com.ecommerce.backend.core.services.JwtService;
+import com.ecommerce.backend.core.utils.exceptions.ResourceNotFoundException;
 import com.ecommerce.backend.dtos.requests.AddressRequestDTO;
 import com.ecommerce.backend.dtos.requests.LoginRequestDTO;
 import com.ecommerce.backend.dtos.requests.UserRequestDTO;
 import com.ecommerce.backend.dtos.responses.AddressResponseDTO;
 import com.ecommerce.backend.dtos.responses.LoginResponseDTO;
 import com.ecommerce.backend.dtos.responses.UserResponseDTO;
+import com.ecommerce.backend.entities.User;
+import com.ecommerce.backend.repositories.UserRepository;
 import com.ecommerce.backend.services.abstracts.UserService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -16,6 +19,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -26,41 +30,67 @@ public class UserController {
     private final UserService userService;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final UserRepository userRepository;
+
+
+
+
+
+
+
+
+
+
+
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDTO> login(@RequestBody @Valid LoginRequestDTO loginRequestDTO) {
+
         try {
-            // Authenticate user
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            loginRequestDTO.getEmail(),
-                            loginRequestDTO.getPassword()
-                    )
-            );
 
-            // Load user details and generate token
-            UserDetails userDetails = userService.loadUserByUsername(loginRequestDTO.getEmail());
-            String jwt = jwtService.generateToken(userDetails);
+            UserResponseDTO userResponse = userService.loginUser(loginRequestDTO);
 
-            // Return token in response
-            return ResponseEntity.ok(new LoginResponseDTO(jwt));
+
+            LoginResponseDTO loginResponse = new LoginResponseDTO();
+            loginResponse.setToken(userResponse.getToken());
+            loginResponse.setId(userResponse.getId().toString());
+            loginResponse.setRole(userResponse.getRole());
+
+            return ResponseEntity.ok(loginResponse);
+
         } catch (BadCredentialsException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
-                    new LoginResponseDTO("Invalid email or password")
-            );
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new LoginResponseDTO());
+
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(new LoginResponseDTO());
+
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                    new LoginResponseDTO("An unexpected error occurred: " + e.getMessage())
-            );
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new LoginResponseDTO());
         }
+
+
+
     }
+
+
+
 
 
     @PostMapping("/register")
     public ResponseEntity<UserResponseDTO> register(@RequestBody @Valid UserRequestDTO userRequestDTO) {
+        // Service katmanı artık otomatik olarak CUSTOMER rolünü setleyip dönecek
         UserResponseDTO response = userService.registerUser(userRequestDTO);
+
+
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
+
 
 
     @GetMapping("/{userId}/profile")

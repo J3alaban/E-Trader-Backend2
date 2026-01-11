@@ -10,8 +10,9 @@ import org.mapstruct.factory.Mappers;
 @Mapper(componentModel = "spring")
 public interface AddressMapper {
 
-    @Mapping(target = "user.id", source = "userId")
+
     Address addressFromRequest(AddressRequestDTO request);
+    //Address addressFromRequest(AddressRequestDTO request);
 
     @Mapping(target = "userId", source = "user.id")
     AddressResponseDTO responseFromAddress(Address address);

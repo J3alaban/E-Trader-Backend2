@@ -28,6 +28,9 @@ public class User  extends BaseEntity implements UserDetails {
     @Column(name = "last_name", nullable = false)
     private String lastName;
 
+    @OneToMany(mappedBy = "user" , cascade = CascadeType.ALL)
+    private List<Wishlist> wishlist;
+
     @Email
     @Column(name = "email", nullable = false)
     private String email;
@@ -43,6 +46,12 @@ public class User  extends BaseEntity implements UserDetails {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Address> addresses;
+
+    @Column (name= "phone")
+    private String phone ;
+
+    @Column(nullable = false)
+    private boolean emailVerified = false;
 
 
     @Override

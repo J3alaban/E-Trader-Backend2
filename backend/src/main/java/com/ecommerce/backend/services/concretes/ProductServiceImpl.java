@@ -3,63 +3,119 @@ package com.ecommerce.backend.services.concretes;
 import com.ecommerce.backend.core.utils.exceptions.ResourceNotFoundException;
 import com.ecommerce.backend.dtos.requests.ProductRequestDTO;
 import com.ecommerce.backend.dtos.responses.ProductResponseDTO;
+import com.ecommerce.backend.entities.Category;
+import com.ecommerce.backend.entities.Meta;
 import com.ecommerce.backend.entities.Product;
 import com.ecommerce.backend.mappers.ProductMapper;
+import com.ecommerce.backend.repositories.CategoryRepository;
 import com.ecommerce.backend.repositories.ProductRepository;
 import com.ecommerce.backend.services.abstracts.ProductService;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import com.ecommerce.backend.repositories.CartItemRepository;
 
-import java.util.List;
+import java.time.Instant;
 
 @Service
 @AllArgsConstructor
 public class ProductServiceImpl implements ProductService {
+
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
-
-    @Override
+    private final CategoryRepository categoryRepository;
+    private final CartItemRepository cartItemRepository;
     public Page<ProductResponseDTO> getAllProducts(Pageable pageable) {
-        return productRepository.findAll(pageable).map(productMapper::responseFromProduct);
+        return productRepository.findAll(pageable)
+                .map(productMapper::responseFromProduct);
     }
 
-    @Override
     public ProductResponseDTO getProductById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
         return productMapper.responseFromProduct(product);
     }
 
-    @Override
-    public ProductResponseDTO createProduct(ProductRequestDTO productRequestDTO) {
-        Product product = productMapper.productFromRequest(productRequestDTO);
-        Product savedProduct = productRepository.save(product);
-        return productMapper.responseFromProduct(savedProduct);
+    public ProductResponseDTO createProduct(ProductRequestDTO dto) {
+
+        // Category bulunuyor
+        Category category = categoryRepository
+                .findBySlug(dto.getCategorySlug())
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+
+        // Mapper ile Product oluşturuluyor
+        Product product = productMapper.productFromRequest(dto, category);
+        product.setCategory(category); // <-- ZORUNLU
+        product.setId(null);
+        product.setVersion(null);
+
+        // Meta set ediliyor
+        Meta meta = new Meta();
+        meta.setCreatedAt(Instant.now());
+        meta.setUpdatedAt(Instant.now());
+        product.setMeta(meta);
+
+        // Kaydet ve response döndür
+        return productMapper.responseFromProduct(productRepository.save(product));
     }
 
-    @Override
-    public ProductResponseDTO updateProduct(Long id, ProductRequestDTO productRequestDTO) {
+    public ProductResponseDTO updateProduct(Long id, ProductRequestDTO dto) {
+
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
-        productMapper.updateProductFromRequest(productRequestDTO, product);
+
+        // Category bulunuyor
+        Category category = categoryRepository
+                .findBySlug(dto.getCategorySlug())
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+
+        // Mapper ile güncelle
+        productMapper.updateProductFromRequest(dto, product, category);
+
+        // Meta güncelle
+        if (product.getMeta() != null) {
+            product.getMeta().setUpdatedAt(Instant.now());
+        }
+
         Product updatedProduct = productRepository.save(product);
         return productMapper.responseFromProduct(updatedProduct);
     }
 
-    @Override
+    @Transactional
     public void deleteProduct(Long id) {
-        productRepository.deleteById(id);
+        if (!productRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Product not found");
+        }
+        cartItemRepository.deleteByProductId(id); // önce
+        productRepository.deleteById(id);         // sonra
     }
 
 
-    @Override
     public ProductResponseDTO updateStock(Long id, Integer stock) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+
         product.setStock(stock);
+
+        if (product.getMeta() != null) {
+            product.getMeta().setUpdatedAt(Instant.now());
+        }
+
         Product updatedProduct = productRepository.save(product);
         return productMapper.responseFromProduct(updatedProduct);
     }
+
+    public Page<ProductResponseDTO> getProductsByCategory(String slug, Pageable pageable) {
+
+        // Category bulunuyor
+        Category category = categoryRepository
+                .findBySlug(slug)
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+
+        return productRepository.findByCategory(category, pageable)
+                .map(productMapper::responseFromProduct);
+    }
 }
+

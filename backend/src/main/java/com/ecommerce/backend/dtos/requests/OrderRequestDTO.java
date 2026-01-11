@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -16,4 +17,5 @@ public class OrderRequestDTO {
     private List<Long> productId; // Kullanıcıdan gelen ürün id'leri
     private Double totalPrice;
     private Long addressId;
+    private LocalDateTime orderDate;
 }
