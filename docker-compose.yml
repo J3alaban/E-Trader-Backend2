@@ -1,6 +1,9 @@
+version: "3.8"
+
 services:
   db:
     image: postgres:16
+    container_name: e-trader-backend-db-1
     environment:
       POSTGRES_DB: db01
       POSTGRES_USER: db01_user
@@ -9,19 +12,28 @@ services:
       - "5433:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
+    networks:
+      - ecommerce-network
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
+    container_name: e-trader-backend-backend-1
+    # DİKKAT: ports: - "8080:8080" kısmını kaldırdık. 
+    # Çünkü 8080 kapısını artık Frontend (Nginx) konteyneri yönetecek.
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/db01
       SPRING_DATASOURCE_USERNAME: db01_user
       SPRING_DATASOURCE_PASSWORD: db01_password
     depends_on:
       - db
+    networks:
+      - ecommerce-network
+
+networks:
+  ecommerce-network:
+    driver: bridge
 
 volumes:
   db_data:
