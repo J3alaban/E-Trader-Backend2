@@ -17,30 +17,16 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfiguration {
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .cors(cors -> {})
-                .csrf(csrf -> csrf.disable())
-                .securityContext(sc -> sc.disable())
-                .sessionManagement(sm -> sm.disable())
-                .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()
-                );
+  @Bean
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http
+        .cors(cors -> cors.disable())
+        .csrf(csrf -> csrf.disable())
+        .securityContext(sc -> sc.disable())
+        .sessionManagement(sm -> sm.disable())
+        .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
 
-        return http.build();
-    }
+    return http.build();
+}
 
-    @Bean
-    CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of("*"));
-        config.setAllowedMethods(List.of("*"));
-        config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(false);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return source;
-    }
 }
