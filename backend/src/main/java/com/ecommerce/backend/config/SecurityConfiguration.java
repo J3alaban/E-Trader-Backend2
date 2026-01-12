@@ -77,13 +77,15 @@ public class SecurityConfiguration {
         return provider;
     }
 
-  @Bean
+@Bean
 CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration config = new CorsConfiguration();
+    // Hem domain adınızı hem de IP adresinizi listeye ekleyin
     config.setAllowedOrigins(List.of(
-            "http://localhost:5173",         // Local frontend
-            "http://demirayhidrolik.com:3000", // Canlı frontend portu
-            "https://demirayhidrolik.com"   // Eğer SSL kullanıyorsan
+        "http://localhost:5173",
+        "http://62.72.21.81", 
+        "http://demirayhidrolik.com",
+        "http://www.demirayhidrolik.com"
     ));
     config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
     config.setAllowedHeaders(List.of("*"));
