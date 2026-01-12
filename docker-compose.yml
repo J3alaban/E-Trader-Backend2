@@ -20,7 +20,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: e-trader-backend-backend-1
-    # DİKKAT: ports: - "8080:8080" kısmını kaldırdık. 
+     ports: - "8080:8080" 
     # Çünkü 8080 kapısını artık Frontend (Nginx) konteyneri yönetecek.
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/db01
