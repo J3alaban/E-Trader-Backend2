@@ -12,10 +12,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -37,12 +34,12 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> {})   // 👈 bunu kullan
+                .cors(cors -> {})   // 👈 CorsConfigurationSource bean'i ile bağlanacak
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/v1/auth/**").permitAll()  //"/api/v1/auth/**"
-                         .requestMatchers("/images/**").permitAll()  //images klasörüne erişim izni için eklendi
+                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/images/**").permitAll()
                         .requestMatchers("/api/v1/**").permitAll()
                         .anyRequest().authenticated()
                 )
@@ -50,8 +47,6 @@ public class SecurityConfiguration {
 
         return http.build();
     }
-
-
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
@@ -82,11 +77,13 @@ public class SecurityConfiguration {
         return provider;
     }
 
-
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173"));
+        config.setAllowedOrigins(List.of(
+                "http://localhost:5173",        // Local frontend
+                "https://demirayhidrolik.com"  // Canlı frontend
+        ));
         config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
@@ -96,5 +93,3 @@ public class SecurityConfiguration {
         return source;
     }
 }
-
-
