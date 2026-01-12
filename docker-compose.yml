@@ -1,5 +1,4 @@
 version: "3.8"
-
 services:
   db:
     image: postgres:16
@@ -10,8 +9,6 @@ services:
       POSTGRES_PASSWORD: db01_password
     ports:
       - "5433:5432"
-    volumes:
-      - db_data:/var/lib/postgresql/data
     networks:
       - ecommerce-network
 
@@ -20,6 +17,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: e-trader-backend-backend-1
+    ports:
+      - "8080:8080" # Backend artık 8080'i tapulu malı yaptı
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/db01
       SPRING_DATASOURCE_USERNAME: db01_user
@@ -32,6 +31,3 @@ services:
 networks:
   ecommerce-network:
     driver: bridge
-
-volumes:
-  db_data:
