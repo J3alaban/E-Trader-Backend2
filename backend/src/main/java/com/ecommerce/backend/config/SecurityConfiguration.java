@@ -21,20 +21,21 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfiguration {
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            // CORS yapılandırmasını açıkça bu sınıftaki bean'e bağlıyoruz
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .csrf(csrf -> csrf.disable())
-            .securityContext(sc -> sc.disable())
-            .sessionManagement(sm -> sm.disable())
-            .authorizeHttpRequests(auth -> auth
-                .anyRequest().permitAll()
-            );
+@Bean
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http
+        // 1. CORS'u en başa al
+        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        // 2. CSRF'i kapat
+        .csrf(csrf -> csrf.disable())
+        // 3. Stateless yapıyı zorla
+        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(auth -> auth
+            .anyRequest().permitAll()
+        );
 
-        return http.build();
-    }
+    return http.build();
+}
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
