@@ -48,7 +48,7 @@ public class SecurityConfiguration {
         configuration.setMaxAge(3600L);
         
         // Credentials (Auth headerları için gerekebilir)
-        configuration.setAllowCredentials(true);
+        configuration.setAllowCredentials(false);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
