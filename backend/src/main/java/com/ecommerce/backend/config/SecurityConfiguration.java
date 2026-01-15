@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -15,6 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @Configuration
+@EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfiguration {
@@ -22,11 +24,14 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .cors(Customizer.withDefaults()) // CORS yapılandırmasını aşağıda tanımladığımız bean'e bağladık
+            // CORS yapılandırmasını açıkça bu sınıftaki bean'e bağlıyoruz
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .securityContext(sc -> sc.disable())
             .sessionManagement(sm -> sm.disable())
-            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+            .authorizeHttpRequests(auth -> auth
+                .anyRequest().permitAll()
+            );
 
         return http.build();
     }
@@ -35,19 +40,19 @@ public class SecurityConfiguration {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // İzin verilen kökenler (Origins)
-       configuration.setAllowedOrigins(List.of("*"));
+        // Tüm kaynaklara izin ver (Wildcard)
+        configuration.setAllowedOriginPatterns(List.of("*"));
         
-        // İzin verilen HTTP Metodları
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        // Tüm standart HTTP metodlarına izin ver
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         
-        // İzin verilen Headerlar
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "X-Requested-With"));
+        // Tüm header geçişlerine izin ver
+        configuration.setAllowedHeaders(List.of("*"));
         
-        // Tarayıcının cevabı önbelleğe alması için (Preflight isteği her seferinde atılmasın diye)
+        // Tarayıcı bu izni 1 saat boyunca hatırlasın (Preflight yükünü azaltır)
         configuration.setMaxAge(3600L);
         
-        // Credentials (Auth headerları için gerekebilir)
+        // AllowedOriginPatterns "*" iken burası FALSE olmalıdır
         configuration.setAllowCredentials(false);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
