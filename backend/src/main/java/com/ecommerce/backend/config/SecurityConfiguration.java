@@ -36,11 +36,7 @@ public class SecurityConfiguration {
         CorsConfiguration configuration = new CorsConfiguration();
         
         // İzin verilen kökenler (Origins)
-        configuration.setAllowedOrigins(Arrays.asList(
-            "http://demirayhidrolik.com",
-            "http://www.demirayhidrolik.com",
-            "http://62.72.21.81:81"
-        ));
+       configuration.setAllowedOrigins(List.of("*"));
         
         // İzin verilen HTTP Metodları
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
