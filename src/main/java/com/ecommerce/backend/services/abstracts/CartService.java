@@ -5,11 +5,11 @@ import com.ecommerce.backend.dtos.responses.CartResponse;
 
 public interface CartService {
 
-    CartResponse getCartByUserId(Long userId);
+    CartResponse getCartByUserId(String userId);
 
-    CartResponse addItemToCart(Long userId, CartItemRequest request);
+    CartResponse addItemToCart(String userId, CartItemRequest request);
 
-    CartResponse removeItemFromCart(Long userId, Long productId);
+    CartResponse removeItemFromCart(String userId, Long productId);
 
-    void clearCart(Long userId);
+    void clearCart(String userId);
 }

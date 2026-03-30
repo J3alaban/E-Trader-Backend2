@@ -18,9 +18,13 @@ public class Cart {
 
     // Her kullanıcıya tek aktif sepet
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @JoinColumn(name = "user_id",unique = true)
     private User user;
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CartItem> cartItems;
+
+    @Column(name = "guest_id")
+    private String guestId;
+
 }

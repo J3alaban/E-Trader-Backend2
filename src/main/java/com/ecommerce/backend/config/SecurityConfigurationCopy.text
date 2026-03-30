@@ -2,6 +2,10 @@ package com.ecommerce.backend.config;
 
 import com.ecommerce.backend.core.services.JwtService;
 import com.ecommerce.backend.repositories.UserRepository;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,10 +19,13 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.OncePerRequestFilter;
 
+import java.io.IOException;
 import java.util.List;
 
 @Configuration
@@ -29,6 +36,8 @@ public class SecurityConfiguration {
     private final UserRepository userRepository;
     private final JwtService jwtService;
 
+    private static final String FRONTEND_URL = "https://demirayhidrolik.com";
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -38,8 +47,18 @@ public class SecurityConfiguration {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()
+                        // Iyzico Callback: Her zaman açık
+                        .requestMatchers("/api/payments/callback").permitAll()
+                        // API Endpointleri: Filtre (Origin) kontrolünden geçmek şartıyla açık
+                        .requestMatchers("/api/**").permitAll()
+                        .anyRequest().denyAll()
                 );
+
+        // 1. ADIM: Postman vb. araçları Origin/Referer üzerinden engelleyen filtre
+        http.addFilterBefore(new RequestOriginFilter(), UsernamePasswordAuthenticationFilter.class);
+
+        // 2. ADIM: Mevcut JWT Filtresi
+        http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -47,15 +66,57 @@ public class SecurityConfiguration {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of("*"));
-        config.setAllowedMethods(List.of("*"));
+        config.setAllowedOriginPatterns(List.of(
+                FRONTEND_URL,
+                "https://www.demirayhidrolik.com",
+                "https://*.iyzipay.com",
+                "https://demirayhidrolik.com"
+        ));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(false);
+        config.setAllowCredentials(true);
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
+    }
+
+    // --- İç Filtre Sınıfı: Postman'i Başlık Üzerinden Reddeder ---
+    private static class RequestOriginFilter extends OncePerRequestFilter {
+        @Override
+        protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+                throws ServletException, IOException {
+
+            String origin = request.getHeader("Origin");
+            String referer = request.getHeader("Referer");
+            String path = request.getRequestURI();
+
+            // Iyzico callback isteği ise veya OPTIONS (preflight) ise denetleme yapma
+            if (path.contains("/api/payments/callback") || request.getMethod().equals("OPTIONS")) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            // Origin veya Referer bizim domainimizi içermiyorsa 403 bas
+            boolean isValid = (origin != null && origin.startsWith("https://demirayhidrolik.com")) ||
+                    (referer != null && referer.startsWith("https://demirayhidrolik.com"));
+
+            if (isValid) {
+                filterChain.doFilter(request, response);
+            } else {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                response.setCharacterEncoding("UTF-8");
+                response.getWriter().write("Erişim Reddedildi: Sadece demirayhidrolik.com üzerinden istek atılabilir.");
+            }
+        }
+    }
+
+    // --- Diğer Beanler ---
+
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter(jwtService, userDetailsService());
     }
 
     @Bean

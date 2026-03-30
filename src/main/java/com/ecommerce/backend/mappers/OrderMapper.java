@@ -10,13 +10,12 @@ import org.mapstruct.Mapping;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = { AddressMapper.class })
 public interface OrderMapper {
 
     @Mapping(target = "userId", source = "user.id")
+    @Mapping(target = "address", source = "address")
     @Mapping(target = "items", expression = "java(mapItems(order.getItems()))")
-    OrderResponseDTO responseFromOrder(Order order);
-
     @Mapping(source = "orderStatus", target = "status")
     OrderResponseDTO toResponseDTO(Order order);
 
@@ -29,7 +28,7 @@ public interface OrderMapper {
                         item.getPrice(),
                         item.getQuantity()
                 ))
-                .collect(Collectors.toList());
+                .toList();
     }
 }
 

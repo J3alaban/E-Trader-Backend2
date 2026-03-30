@@ -32,7 +32,7 @@ public class User  extends BaseEntity implements UserDetails {
     private List<Wishlist> wishlist;
 
 
-    @Column(name = "tc_no", length = 11, unique = true, nullable = false)
+    @Column(name = "tc_no", length = 11, unique = true)
     private String tcNo;
 
 

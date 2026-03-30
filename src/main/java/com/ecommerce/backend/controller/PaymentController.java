@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.http.MediaType;
 import com.ecommerce.backend.services.concretes.PaymentServiceImpl;
 import java.net.URI;
 import java.util.List;
@@ -39,16 +39,15 @@ public class PaymentController {
         return ResponseEntity.ok(paymentService.startIyzico(request));
     }
 
-    @PostMapping("/callback")
-    public ResponseEntity<Void> iyzicoCallback(@RequestBody Map<String, String> payload) {
+
+
+    @PostMapping(value = "/callback", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    public ResponseEntity<Void> iyzicoCallback(@RequestParam Map<String, String> payload) {
         String token = payload.get("token");
         paymentService.completeIyzicoPayment(token);
-
         return ResponseEntity.status(HttpStatus.FOUND)
                 .location(URI.create("https://demirayhidrolik.com/payment-success"))
                 .build();
     }
-
-
 
 }

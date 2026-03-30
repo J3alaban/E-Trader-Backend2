@@ -18,6 +18,6 @@ public class OrderResponseDTO {
     private LocalDateTime orderDate;
     private Double totalPrice;
     private List<OrderItemResponseDTO> items;
-    private Long addressId;
+    private AddressResponseDTO address;
     private String status;
 }

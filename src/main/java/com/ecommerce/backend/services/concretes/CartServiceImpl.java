@@ -26,17 +26,14 @@ public class CartServiceImpl implements CartService {
     private final CartMapper cartMapper;
 
     @Override
-    public CartResponse getCartByUserId(Long userId) {
-        Cart cart = cartRepository.findByUserId(userId)
-                .orElseGet(() -> createCart(userId));
-
+    public CartResponse getCartByUserId(String userId) {
+        Cart cart = resolveCart(userId);
         return buildResponse(cart);
     }
 
     @Override
-    public CartResponse addItemToCart(Long userId, CartItemRequest request) {
-        Cart cart = cartRepository.findByUserId(userId)
-                .orElseGet(() -> createCart(userId));
+    public CartResponse addItemToCart(String userId, CartItemRequest request) {
+        Cart cart = resolveCart(userId);
 
         Product product = productRepository.findById(request.getProductId())
                 .orElseThrow();
@@ -62,9 +59,8 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public CartResponse removeItemFromCart(Long userId, Long productId) {
-        Cart cart = cartRepository.findByUserId(userId)
-                .orElseThrow();
+    public CartResponse removeItemFromCart(String userId, Long productId) {
+        Cart cart = resolveCart(userId);
 
         cart.getCartItems()
                 .removeIf(i -> i.getProduct().getId().equals(productId));
@@ -74,14 +70,28 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public void clearCart(Long userId) {
-        Cart cart = cartRepository.findByUserId(userId)
-                .orElseThrow();
+    public void clearCart(String userId) {
+        Cart cart = resolveCart(userId);
 
         cart.getCartItems().clear();
         cartRepository.save(cart);
     }
 
+    // -----------------------
+    // ORTAK CART RESOLVER
+    // -----------------------
+    private Cart resolveCart(String userId) {
+        if (userId.matches("\\d+")) {
+            Long realUserId = Long.parseLong(userId);
+            return cartRepository.findByUserId(realUserId)
+                    .orElseGet(() -> createCart(realUserId));
+        } else {
+            return cartRepository.findByGuestId(userId)
+                    .orElseGet(() -> createGuestCart(userId));
+        }
+    }
+
+    // USER cart
     private Cart createCart(Long userId) {
         User user = userRepository.findById(userId).orElseThrow();
 
@@ -89,6 +99,14 @@ public class CartServiceImpl implements CartService {
         cart.setUser(user);
         cart.setCartItems(new ArrayList<>());
 
+        return cartRepository.save(cart);
+    }
+
+    // GUEST cart
+    private Cart createGuestCart(String guestId) {
+        Cart cart = new Cart();
+        cart.setGuestId(guestId);
+        cart.setCartItems(new ArrayList<>());
         return cartRepository.save(cart);
     }
 

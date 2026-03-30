@@ -23,6 +23,14 @@ public class OrderController {
     }
 
 
+    @GetMapping
+    public ResponseEntity<List<OrderResponseDTO>> getAllOrders() {
+        List<OrderResponseDTO> response = orderService.getAllOrders();
+        return ResponseEntity.ok(response);
+    }
+
+
+
     @GetMapping("/{id}")
     public ResponseEntity<OrderResponseDTO> getOrderById(@PathVariable Long id) {
         OrderResponseDTO response = orderService.getOrderById(id);
@@ -49,6 +57,8 @@ public class OrderController {
         orderService.cancelOrder(id);
         return ResponseEntity.noContent().build();
     }
+
+
 
 
 }

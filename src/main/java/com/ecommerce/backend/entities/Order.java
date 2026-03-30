@@ -19,7 +19,7 @@ import java.util.List;
 public class Order extends BaseEntity{
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
     @ManyToMany(mappedBy = "orders")

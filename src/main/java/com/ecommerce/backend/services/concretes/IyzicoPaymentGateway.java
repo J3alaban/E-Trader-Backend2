@@ -7,6 +7,7 @@ import com.ecommerce.backend.entities.Payment;
 import com.ecommerce.backend.services.abstracts.PaymentGateway;
 import com.iyzipay.Options;
 import com.iyzipay.model.*;
+import com.iyzipay.model.Address;
 import com.iyzipay.request.CreateCheckoutFormInitializeRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,7 +28,6 @@ public class IyzicoPaymentGateway implements PaymentGateway {
     }
 
 
-
     @Override
     public String initializeForm(Payment payment) {
 
@@ -46,6 +46,7 @@ public class IyzicoPaymentGateway implements PaymentGateway {
         request.setCurrency(Currency.TRY.name());
         request.setBasketId("B" + payment.getOrder().getId());
         request.setPaymentGroup(PaymentGroup.PRODUCT.name());
+
         request.setCallbackUrl(
                 iyzicoConfig.getCallbackUrl()
         );
@@ -53,28 +54,44 @@ public class IyzicoPaymentGateway implements PaymentGateway {
         // BUYER
         User user = payment.getOrder().getUser();
         Buyer buyer = new Buyer();
-        buyer.setId(user.getId().toString());
-        buyer.setName(user.getFirstName());
-        buyer.setSurname(user.getLastName());
-        buyer.setEmail(user.getEmail());
-        buyer.setGsmNumber(user.getPhone());
-        buyer.setIdentityNumber(user.getTcNo());
-        buyer.setRegistrationAddress(payment.getAddress().getStreet());
-        buyer.setCity(payment.getAddress().getCity());
-        buyer.setCountry(payment.getAddress().getCountry());
+        if (user != null) {
+            buyer.setId(user.getId().toString());
+            buyer.setName(user.getFirstName());
+            buyer.setSurname(user.getLastName());
+            buyer.setEmail(user.getEmail());
+            buyer.setGsmNumber(user.getPhone());
+            buyer.setIdentityNumber(user.getTcNo());
+            buyer.setRegistrationAddress(
+                    payment.getAddress() != null ? payment.getAddress().getStreet() : "N/A"
+            );
+            buyer.setCity(payment.getAddress() != null ? payment.getAddress().getCity() : "N/A");
+            buyer.setCountry(payment.getAddress() != null ? payment.getAddress().getCountry() : "N/A");
+        } else {
+            // Misafir kullanıcı
+            buyer.setId("0");
+            buyer.setName("Misafir");
+            buyer.setSurname("Kullanıcı");
+            buyer.setEmail("guest@example.com");
+            buyer.setGsmNumber("0000000000");
+            buyer.setIdentityNumber("00000000000");
+            buyer.setRegistrationAddress(payment.getAddress() != null ? payment.getAddress().getStreet() : "N/A");
+            buyer.setCity(payment.getAddress() != null ? payment.getAddress().getCity() : "N/A");
+            buyer.setCountry(payment.getAddress() != null ? payment.getAddress().getCountry() : "N/A");
+        }
         buyer.setIp("127.0.0.1");
         request.setBuyer(buyer);
 
         // ADDRESS
-        com.iyzipay.model.Address address =
-                new com.iyzipay.model.Address();
-        address.setContactName(
-                user.getFirstName() + " " + user.getLastName()
-        );
-        address.setCity(payment.getAddress().getCity());
-        address.setCountry(payment.getAddress().getCountry());
-        address.setAddress(payment.getAddress().getStreet());
-        address.setZipCode(payment.getAddress().getZipCode());
+        Address address = new Address();
+        if (user != null) {
+            address.setContactName(user.getFirstName() + " " + user.getLastName());
+        } else {
+            address.setContactName("Misafir Kullanıcı");
+        }
+        address.setCity(payment.getAddress() != null ? payment.getAddress().getCity() : "N/A");
+        address.setCountry(payment.getAddress() != null ? payment.getAddress().getCountry() : "N/A");
+        address.setAddress(payment.getAddress() != null ? payment.getAddress().getStreet() : "N/A");
+        address.setZipCode(payment.getAddress() != null ? payment.getAddress().getZipCode() : "00000");
 
         request.setBillingAddress(address);
         request.setShippingAddress(address);
@@ -82,20 +99,12 @@ public class IyzicoPaymentGateway implements PaymentGateway {
         // BASKET ITEMS
         List<BasketItem> basketItems = new ArrayList<>();
         for (OrderItem item : payment.getOrder().getOrderItems()) {
-
             BasketItem basketItem = new BasketItem();
             basketItem.setId(item.getProduct().getId().toString());
             basketItem.setName(item.getProduct().getTitle());
-            basketItem.setCategory1(
-                    item.getProduct().getCategory().getName()
-            );
+            basketItem.setCategory1(item.getProduct().getCategory().getName());
             basketItem.setItemType("PHYSICAL");
-            basketItem.setPrice(
-                    BigDecimal.valueOf(
-                            item.getPrice() * item.getQuantity()
-                    )
-            );
-
+            basketItem.setPrice(BigDecimal.valueOf(item.getPrice() * item.getQuantity()));
             basketItems.add(basketItem);
         }
         request.setBasketItems(basketItems);
@@ -112,6 +121,11 @@ public class IyzicoPaymentGateway implements PaymentGateway {
         payment.setTransactionId(result.getToken());
         return result.getCheckoutFormContent();
     }
+
+
+
+
+
 
     @Override
     public Payment pay(Payment payment) {

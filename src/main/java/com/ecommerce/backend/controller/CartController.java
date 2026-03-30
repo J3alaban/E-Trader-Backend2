@@ -15,14 +15,14 @@ public class CartController {
 
     // Kullanıcının sepetini getir
     @GetMapping("/{userId}")
-    public CartResponse getCart(@PathVariable Long userId) {
+    public CartResponse getCart(@PathVariable String userId) {
         return cartService.getCartByUserId(userId);
     }
 
     // Sepete ürün ekle
     @PostMapping("/{userId}/items")
     public CartResponse addItem(
-            @PathVariable Long userId,
+            @PathVariable String userId,
             @RequestBody CartItemRequest request
     ) {
         return cartService.addItemToCart(userId, request);
@@ -31,7 +31,7 @@ public class CartController {
     // Sepetten ürün sil
     @DeleteMapping("/{userId}/items/{productId}")
     public CartResponse removeItem(
-            @PathVariable Long userId,
+            @PathVariable String userId,
             @PathVariable Long productId
     ) {
         return cartService.removeItemFromCart(userId, productId);
@@ -39,18 +39,7 @@ public class CartController {
 
     // Sepeti temizle
     @DeleteMapping("/{userId}")
-    public void clearCart(@PathVariable Long userId) {
+    public void clearCart(@PathVariable String userId) {
         cartService.clearCart(userId);
     }
-
-
-    /* URLs
-GET /api/v1/carts/{userId}
-
-POST /api/v1/carts/{userId}/items
-
-DELETE /api/v1/carts/{userId}/items/{productId}
-
-DELETE /api/v1/carts/{userId}
-     */
 }

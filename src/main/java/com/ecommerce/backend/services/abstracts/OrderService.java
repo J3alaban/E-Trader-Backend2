@@ -12,4 +12,6 @@ public interface OrderService {
     List<OrderResponseDTO> getOrdersByUserId(Long userId);
     OrderResponseDTO updateOrderStatus(Long id, OrderStatusRequestDTO orderStatusRequestDTO);
     void cancelOrder(Long id);
+    List<OrderResponseDTO> getAllOrders();
+
 }

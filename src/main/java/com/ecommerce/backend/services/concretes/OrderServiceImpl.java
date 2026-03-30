@@ -29,15 +29,19 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderResponseDTO createOrder(OrderRequestDTO dto) {
-        User user = userRepository.findById(dto.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
 
+        User user = null;
+        if (dto.getUserId() != null && dto.getUserId() != 0) {
+            user = userRepository.findById(dto.getUserId())
+                    .orElse(null); // orElseThrow yerine orElse(null)
+        }
         Order order = new Order();
         order.setUser(user);
         order.setTotalPrice(dto.getTotalPrice());
         order.setOrderDate(dto.getOrderDate() != null ? dto.getOrderDate() : LocalDateTime.now());
 
         dto.getItems().forEach(itemDto -> {
+
             Product product = productRepository.findById(itemDto.getProductId())
                     .orElseThrow(() -> new RuntimeException("Product not found"));
 
@@ -51,44 +55,60 @@ public class OrderServiceImpl implements OrderService {
         });
 
         Order savedOrder = orderRepository.save(order);
-        return orderMapper.responseFromOrder(savedOrder);
+
+        return orderMapper.toResponseDTO(savedOrder);
     }
 
     @Override
     public OrderResponseDTO getOrderById(Long id) {
+
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
-        // lazy fetch tetikleme respone body de nullş dönemsinb diye
         if (order.getItems() != null) {
-            order.getItems().size(); // burada JPA listeyi yükler
+            order.getItems().size(); // lazy load
         }
 
-        return orderMapper.responseFromOrder(order);
+        return orderMapper.toResponseDTO(order);
     }
 
     @Override
     public List<OrderResponseDTO> getOrdersByUserId(Long userId) {
+
         return orderRepository.findByUserId(userId)
                 .stream()
-                .map(orderMapper::responseFromOrder)
+                .map(orderMapper::toResponseDTO)
                 .toList();
     }
 
     @Override
     public OrderResponseDTO updateOrderStatus(Long id, OrderStatusRequestDTO dto) {
+
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
         order.setOrderStatus(Order.OrderStatus.valueOf(dto.getStatus()));
-        return orderMapper.responseFromOrder(orderRepository.save(order));
+
+        return orderMapper.toResponseDTO(orderRepository.save(order));
     }
 
     @Override
     public void cancelOrder(Long id) {
+
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
+
         order.setOrderStatus(Order.OrderStatus.CANCELLED);
         orderRepository.save(order);
     }
+
+    @Override
+    public List<OrderResponseDTO> getAllOrders() {
+
+        return orderRepository.findAll()
+                .stream()
+                .map(orderMapper::toResponseDTO)
+                .toList();
+    }
 }
+

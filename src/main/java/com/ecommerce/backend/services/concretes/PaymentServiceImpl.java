@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -35,11 +36,13 @@ public class PaymentServiceImpl implements PaymentService {
         Order order = orderRepository.findById(request.getOrderId())
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
-        Address address = addressRepository.findById(request.getAddressId())
-                .orElseThrow(() -> new RuntimeException("Address not found"));
-
-        order.setAddress(address);
-        orderRepository.save(order);
+        Address address = null;
+        if (request.getAddressId() != null) {
+            address = addressRepository.findById(request.getAddressId())
+                    .orElseThrow(() -> new RuntimeException("Address not found"));
+            order.setAddress(address);
+            orderRepository.save(order);
+        }
 
         Payment payment = paymentMapper.toEntity(request, order, address);
         payment.setAmount(BigDecimal.valueOf(order.getTotalPrice()));
@@ -55,6 +58,7 @@ public class PaymentServiceImpl implements PaymentService {
 
 
 
+
     // IYZICO FORM BAŞLATMA
     @Override
     @Transactional
@@ -63,31 +67,60 @@ public class PaymentServiceImpl implements PaymentService {
         Order order = orderRepository.findById(request.getOrderId())
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
-        Address address = addressRepository.findById(request.getAddressId())
-                .orElseThrow(() -> new RuntimeException("Address not found"));
+        Address address = null;
+        if (request.getAddressId() != null) {
+            address = addressRepository.findById(request.getAddressId())
+                    .orElseThrow(() -> new RuntimeException("Address not found"));
+            order.setAddress(address);
+            orderRepository.save(order);
+        } else if (order.getAddress() != null) {
+            address = order.getAddress();
+        } else {
+
+            address = new Address();
+
+            address.setStreet("Adres yok");
+            address.setCity("Şehir");
+            address.setState("İl"); // örnek değer
+            address.setZipCode("00000");
+            address.setCountry("Türkiye");
+
+
+
+
+            addressRepository.save(address);
+
+            order.setAddress(address);
+            orderRepository.save(order);
+        }
 
         User user = order.getUser();
-        if (user.getTcNo() == null) {
-            throw new RuntimeException("User TC No is required");
+        if (user == null) {
+            // Misafir kullanıcı için geçici user oluştur
+            user = new User();
+            user.setFirstName("Guest");
+            user.setLastName("User");
+            user.setEmail("guest-" + UUID.randomUUID() + "@guest.com");
+            // Database'e kaydetmeye gerek yok
         }
 
         if (order.getOrderItems() == null || order.getOrderItems().isEmpty()) {
             throw new RuntimeException("Order has no products");
         }
 
-        order.setAddress(address);
-        orderRepository.save(order);
-
         Payment payment = paymentMapper.toEntity(request, order, address);
         payment.setAmount(BigDecimal.valueOf(order.getTotalPrice()));
         payment.setStatus(PaymentStatus.PENDING);
+        payment.setAddress(address); // null hatasını önlemek için
+
+        // Payment kaydı mutlaka olmalı ki ID dolsun
         paymentRepository.save(payment);
 
         String checkoutFormContent =
                 paymentProviderService.initializeIyzicoForm(payment);
 
         payment.setCheckoutFormContent(checkoutFormContent);
-        paymentRepository.save(payment);
+        paymentRepository.save(payment); // tekrar kaydet
 
         PaymentResponse response = paymentMapper.toResponse(payment);
         response.setCheckoutFormContent(checkoutFormContent);
