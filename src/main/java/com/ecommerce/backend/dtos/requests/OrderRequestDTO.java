@@ -13,8 +13,14 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OrderRequestDTO {
+
     private Long userId;
     private List<OrderItemRequestDTO> items;
     private Double totalPrice;
     private LocalDateTime orderDate;
+
+    // Guest user bilgileri — kayıtlı kullanıcıda null gelir
+    private String guestName;
+    private String guestEmail;
+    private String guestPhone;
 }

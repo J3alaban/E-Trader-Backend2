@@ -18,6 +18,13 @@ public class PaymentRequest {
     private String currency;
     private PaymentProvider provider;
 
+    // Adres
+    private String guestAddress;
     private Long addressId;
 
+    // Guest buyer bilgileri — Iyzico buyer nesnesinde kullanılır
+    // Kayıtlı kullanıcıda null gelir; IyzicoPaymentGateway user'dan okur.
+    private String guestName;
+    private String guestEmail;
+    private String guestPhone;
 }

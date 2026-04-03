@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.*;
 @Getter
 @Setter
@@ -55,6 +57,8 @@ public class Payment extends BaseEntity {
     private String checkoutFormContent;
 
     private String callbackToken;
+
+
 
 }
 

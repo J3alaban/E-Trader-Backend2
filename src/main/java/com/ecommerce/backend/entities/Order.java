@@ -16,10 +16,10 @@ import java.util.List;
 @AllArgsConstructor
 @Entity
 @Table(name = "orders")
-public class Order extends BaseEntity{
+public class Order extends BaseEntity {
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = true)
     private User user;
 
     @ManyToMany(mappedBy = "orders")
@@ -31,32 +31,39 @@ public class Order extends BaseEntity{
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Payment> payments;
 
-
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "address_id", nullable = true)
     private Address address;
 
-
     @Column(name = "order_date", nullable = false)
     private LocalDateTime orderDate;
+
     @Column(name = "total_price", nullable = false)
     private Double totalPrice;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
 
-
-    public enum OrderStatus {
-        PENDING,  // Sipariş bekliyor
-        SHIPPED,  // Sipariş gönderildi
-        DELIVERED, // Sipariş teslim edildi
-        CANCELLED  // Sipariş iptal edildi
-    }
-
-    @OneToMany(mappedBy = "order", fetch = FetchType.LAZY)
-    private List<OrderItem> orderItem;
-
-
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
+
+    // ── Guest kullanıcı bilgileri ──────────────────────────────
+    // Kayıtlı kullanıcılarda bu alanlar null kalır.
+    // DB'ye ayrı bir guest user kaydı AÇILMAZ.
+    @Column(name = "guest_name")
+    private String guestName;
+
+    @Column(name = "guest_email")
+    private String guestEmail;
+
+    @Column(name = "guest_phone")
+    private String guestPhone;
+    // ──────────────────────────────────────────────────────────
+
+    public enum OrderStatus {
+        PENDING,
+        SHIPPED,
+        DELIVERED,
+        CANCELLED
+    }
 }
